@@ -1,0 +1,166 @@
+cst/
+│
+├── 📄 __init__.py              # 包初始化（需要创建）
+├── 🔧  cst_tools.py            # CST接口工具类
+├── 💾  memory_manager.py       # 记忆管理系统
+├── 🎯  cst_rag.py             # CST优化RAG系统（编排层）
+└── 🧪  test.py                # 测试示例
+
+
+CSTInterface (CST接口类)
+├── load_project() - 加载CST项目
+│   ├── 读取.cst项目文件
+│   └── 自动读取当前参数
+├── modify_parameters() - 修改仿真参数
+│   ├── 更新参数字典
+│   └── 验证参数有效性
+└── read_results_and_summarize() - 读取结果并总结
+    ├── 解析S参数文件 (.txt/.csv/.dat)
+    ├── 解析VSWR文件
+    ├── 解析增益文件
+    ├── 解析效率文件
+    └── 生成一句话总结
+
+
+MemoryManager (记忆管理器)
+├── ShortTermMemory (短期记忆)
+│   ├── add_message() - 添加对话消息
+│   ├── get_history() - 获取对话历史
+│   ├── get_context_string() - 格式化上下文
+│   └── clear() - 清空短期记忆
+└── LongTermMemory (长期记忆)
+    ├── add_simulation_result() - 保存仿真结果
+    ├── search_similar_simulations() - 搜索相似仿真
+    │   ├── 向量模式（语义搜索，慢）
+    │   └── 快速模式（关键词搜索，快）
+    ├── get_simulation_by_id() - 按ID获取
+    ├── list_simulations() - 列出仿真记录
+    └── delete_simulation() - 删除仿真记录
+
+
+CSTOptimizationRAG (CST优化RAG系统)
+├── initialize() - 初始化系统
+├── create_cst_interface() - 创建CST接口
+├── analyze_current_results() - 分析当前结果
+│   ├── 搜索历史相似仿真
+│   ├── 构建历史经验上下文
+│   ├── 调用LLM生成优化建议
+│   └── 解析优化建议
+├── apply_optimization() - 应用优化建议
+│   ├── 修改CST参数
+│   └── 验证修改结果
+└── run_optimization_cycle() - 运行优化循环
+    ├── 读取当前仿真结果
+    ├── 分析并生成优化建议
+    ├── 应用参数修改
+    ├── 执行新仿真
+    └── 自动保存到长期记忆
+
+
+用户发起优化请求
+  ↓
+读取当前CST仿真结果
+  ↓
+搜索历史相似仿真记录
+  ↓
+构建上下文（当前结果 + 历史经验）
+  ↓
+调用通义千问LLM
+  ↓
+生成参数优化建议
+  ↓
+应用参数修改到CST
+  ↓
+执行新仿真
+  ↓
+保存结果到长期记忆
+  ↓
+判断是否继续迭代
+
+
+┌─────────────┐
+│  系统初始化阶段  │
+└─────────────┘
+     ↓
+1. 加载CST项目文件
+2. 读取当前仿真参数
+3. 初始化LLM客户端
+4. 初始化记忆系统
+   - 短期记忆（对话历史）
+   - 长期记忆（ChromaDB）
+5. 选择搜索模式
+   - 快速模式（关键词）
+   - 向量模式（语义）
+
+┌─────────────┐
+│  单次优化流程  │
+└─────────────┘
+     ↓
+1. 读取CST仿真结果文件
+   - S参数、VSWR、增益、效率
+2. 生成结果总结
+3. 查询长期记忆
+   - 搜索相似历史仿真
+   - 提取经验知识
+4. 构建Prompt
+   - 当前参数 + 结果
+   - 优化目标
+   - 历史经验
+5. 调用LLM生成建议
+6. 解析参数调整方案
+7. 应用到CST模型
+8. 执行新仿真
+9. 自动保存到长期记忆
+
+┌─────────────┐
+│  多次优化循环  │
+└─────────────┘
+     ↓
+1. 设置优化目标和最大迭代次数
+2. FOR each iteration:
+   a. 读取当前结果
+   b. 分析并生成建议
+   c. 应用参数修改
+   d. 记录优化历史
+   e. 询问是否继续
+3. 最终仿真并保存
+4. 生成优化报告
+
+
+SimulationResult (仿真结果数据结构)
+├── simulation_id - 仿真唯一标识
+├── timestamp - 时间戳
+├── parameters - 仿真参数字典
+├── results - 仿真结果字典
+├── summary - 一句话总结
+├── tags - 标签列表
+└── metadata - 附加元数据
+
+
+Utility Functions
+├── _parse_result_file() - 解析结果文件
+├── _generate_one_sentence_summary() - 生成总结
+│   └── 提取关键指标
+├── _build_history_context() - 构建历史上下文
+│   └── [记录1] 参数 + 结果 + 相似度
+├── _build_optimization_prompt() - 构建优化提示词
+│   ├── 当前参数
+│   ├── 当前结果
+│   ├── 优化目标
+│   └── 历史经验
+├── _parse_optimization_suggestion() - 解析优化建议
+│   ├── JSON格式解析
+│   └── 降级文本解析
+└── _fallback_parse() - 降级解析
+    ├── 匹配 "参数名: 值"
+    └── 匹配 "将参数调整为值"
+
+
+核心特性：
+✅ 自动化优化循环
+✅ 基于历史经验的智能优化
+✅ 长期记忆持久化存储
+✅ 支持快速模式和向量模式
+✅ LLM驱动的参数调优
+✅ 完整的优化历史记录
+✅ 一键式优化流程

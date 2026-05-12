@@ -1,0 +1,110 @@
+simple_rag/
+│
+├── 📄 __init__.py              # 包初始化
+├── ⚙️  config.py               # 配置管理中心
+├── 🔢  embedding_utils.py      # 向量嵌入与检索
+├── 🔍  retriever.py            # 混合检索器
+├── 💬  llm_client.py           # 通义千问客户端
+├── 🎯  rag_system.py           # RAG主系统（编排层）
+├── 🛠️  utils.py                # 工具函数
+├── 🚀  main.py                 # 使用示例
+├── 📦  requirements.txt        # Python依赖
+├── 🔑  .env.example            # 环境变量模板
+└── 📖  README.md               # 项目文档
+
+
+RAGConfig
+├── 通义千问配置
+│   ├── dashscope_api_key
+│   └── qwen_model_name
+├── 数据库配置
+│   ├── chroma_persist_dir
+│   └── collection_name
+├── 嵌入模型配置
+│   └── embedding_model_path
+└── 检索参数
+    ├── top_k
+    ├── chunk_size
+    └── max_context_chars
+
+
+HybridRetriever (混合检索器)
+├── EmbeddingUtils (向量检索)
+│   ├── SentenceTransformer (BGE-M3)
+│   ├── embed_documents()
+│   ├── embed_query()
+│   └── similarity_search() → ChromaDB
+└── BM25Indexer (关键词检索)
+    ├── tokenize()
+    ├── build()
+    └── search()
+
+
+用户查询
+  ↓
+向量编码 (Embedding)
+  ↓
+ChromaDB相似性搜索 → 向量结果
+  ↓
+BM25关键词搜索 → 关键词结果
+  ↓
+结果融合与排序
+  ↓
+Top-K相关文档
+
+
+QwenLLMClient
+├── Tongyi (LangChain封装)
+├── chat() - 单次对话
+│   ├── SystemMessage (系统提示)
+│   ├── HumanMessage (用户问题+上下文)
+│   └── StrOutputParser (输出解析)
+└── chat_with_history() - 多轮对话
+    └── 消息历史管理
+
+
+检索到的文档
+  ↓
+上下文格式化
+  ↓
+构建Prompt (系统提示 + 用户问题 + 上下文)
+  ↓
+LangChain调用
+  ↓
+DashScope API (通义千问3)
+  ↓
+生成答案
+
+
+Utility Functions
+├── normalize_whitespace() - 文本标准化
+├── format_context() - 上下文格式化
+│   └── [1] 来源#ID: 内容片段
+└── extract_citations() - 引用提取
+    └── [{id, source, chunk_id}]
+
+
+┌─────────────┐
+│  文档入库阶段  │
+└─────────────┘
+     ↓
+1. PDF/文本 → 文本提取
+2. 文本分块 (Chunking)
+3. 生成嵌入向量 (Embedding)
+4. 存储到ChromaDB
+5. 构建BM25索引
+
+┌─────────────┐
+│  查询回答阶段  │
+└─────────────┘
+     ↓
+1. 接收用户问题
+2. 向量检索 (语义匹配)
+3. BM25检索 (关键词匹配)
+4. 结果融合与重排序
+5. 提取Top-K文档
+6. 格式化上下文
+7. 构建Prompt
+8. 调用通义千问
+9. 生成答案
+10. 返回答案+引用

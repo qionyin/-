@@ -12,7 +12,7 @@ class RAGConfig:
     """RAG系统配置类"""
 
     # 通义千问配置
-    dashscope_api_key: str = "sk-0e434c239b454d59bedddf62eaa3f7fe"
+    dashscope_api_key: str = ""#你的密钥
     qwen_model_name: str = "qwen3-max"
 
     # 数据库配置
